@@ -1,7 +1,7 @@
 #include "chip8.h"
 class chip8{
     //chip-8 system
-    //35 operation codes 
+    //35 operation codes, 2bytes long 
     unsigned short opcode;
     //4gb of memory
     unsigned char memory[4096];
@@ -35,18 +35,46 @@ class chip8{
 
         void initialize(){
             // Initialize registers and memory once
+            pc     = 0x200;  // Program counter starts at 0x200
+            opcode = 0;      // Reset current opcode	
+            I      = 0;      // Reset index register
+            sp     = 0;      // Reset stack pointer
+            // Clear display	
+            // Clear stack
+            // Clear registers V0-VF
+            // Clear memory
+
+            // Load fontset
+            for(int i = 0; i < 80; ++i){
+                //memory[i] = chip8_fontset[i];		
+            }
+            // Reset timers
         }
+
         void loadGame(std::string gameName){
 
         }
         void setKeys(){
 
         }
+        //Emulates one emulation cycle, where an opcode is fetch, decoded and executed
         void emulateCycle(){
             // Fetch Opcode
+            //Each opcode is 2 bytes, which means the code in memory is in two positions pc and pc+1.
+            //We bit shift the first code 8 bits, and complete it by doing an OR operation with the 2nd memory position and the 0s
+            //of the bitshift.
+            opcode = memory[pc] << 8 | memory[pc + 1];opcode = memory[pc] << 8 | memory[pc + 1];
             // Decode Opcode
+            //we need to decode the opcode and check the opcode table to see what it means.
+
             // Execute Opcode
+            
+            //For the ANNN, we have to store in the I(Index Register), the value of NNN so we remove the first 4bits, with an AND operation with 0x0FFF (0000 1111 1111 1111)
+            I = opcode & 0x0FFF;
+            //Because each code is 2 bytes the next code will be two positions forward
+            pc += 2;
 
             // Update timers
+            //Emulation cycles has to execute 60 codes per second (60Hz) for the timers to work correctly.
         }
 };
