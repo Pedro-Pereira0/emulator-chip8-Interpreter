@@ -63,7 +63,7 @@
         sound_timer = 0;
     }
 
-    bool chip8::loadGame(char* gameName){
+    bool chip8::loadGame(const char* gameName){
 
         initialize();
 
