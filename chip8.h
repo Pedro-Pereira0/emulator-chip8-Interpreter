@@ -20,7 +20,7 @@ class chip8{
         unsigned short opcode;
         //4gb of memory
         unsigned char memory[4096];
-        //15 8-bit registers - 16 usado como carry-flag
+        //15 8-bit registers - 16 used has carry-flag
         unsigned char V[16];
         //Index Register
         unsigned short I;

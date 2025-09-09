@@ -33,6 +33,7 @@
     
 
     void chip8::initialize(){
+        
         // Initialize registers and memory once
         pc     = 0x200;  // Program counter starts at 0x200
         opcode = 0;      // Reset current opcode	
@@ -99,6 +100,7 @@
         }
 
         //Copy buffer to Chip8 memory
+        //The CHIP-8 interpreter itself occupies the first 512 bytes of the memory space on these machines.
         if((4096-512) > lSize)
         {
             for(int i = 0; i < lSize; ++i)
@@ -113,26 +115,134 @@
 
         return true;
     }
+
     void chip8::setKeys(){
 
     }
+
     //Emulates one emulation cycle, where an opcode is fetch, decoded and executed
     void chip8::emulateCycle(){
+        
         // Fetch Opcode
-        //Each opcode is 2 bytes, which means the code in memory is in two positions pc and pc+1.
-        //We bit shift the first code 8 bits, and complete it by doing an OR operation with the 2nd memory position and the 0s
+        //Each opcode is 2 bytes, which means the opcode in memory is in two positions pc and pc+1.
+        //We bit shift the first opcode 8 bits, and complete it by doing an OR operation with the 2nd memory position and the 0s
         //of the bitshift.
-        opcode = memory[pc] << 8 | memory[pc + 1];opcode = memory[pc] << 8 | memory[pc + 1];
+        opcode = memory[pc] << 8 | memory[pc + 1];
+
         // Decode Opcode
         //we need to decode the opcode and check the opcode table to see what it means.
+        //First we get the first 4bits of the code
+        switch(opcode & 0xF000)
+        {    
+            case 0xA000: // ANNN: Sets I to the address NNN
+                // Execute opcode
+                //For the ANNN, we have to store in the I(Index Register), 
+                //the value of NNN so we remove the first 4bits, with an AND operation with 0x0FFF (0000 1111 1111 1111)
+                I = opcode & 0x0FFF;
 
-        // Execute Opcode
+                //Because each code is 2 bytes the next code will be two positions forward
+                pc += 2;
+            break;
         
-        //For the ANNN, we have to store in the I(Index Register), the value of NNN so we remove the first 4bits, with an AND operation with 0x0FFF (0000 1111 1111 1111)
-        I = opcode & 0x0FFF;
-        //Because each code is 2 bytes the next code will be two positions forward
-        pc += 2;
+            case 0xB000: //BNNN: Jumps to the address NNN plus V0
+                pc = V[0] + (opcode & 0x0FFF);
+            break;
+
+            case 0xC000:
+            break;
+            
+            case 0xD000:
+            break;
+
+            case 0xE000:
+            break;
+
+            case 0xF000:
+            break;
+
+            case 0x2000: //Calls subroutine at NNN.
+                //Temporary call, save the program counter in the stack
+                stack[sp] = pc;
+                //increment the stack pointer, so the program counter isn't overwritten
+                ++sp;
+                //Set the program counter to the address NNN
+                pc = opcode & 0x0FFF;
+                //Because we are calling at a specific address, we don't increment pc
+            break;
+
+            case 0x3000:
+            break;
+
+            case 0x4000:
+            break;
+
+            case 0x5000:
+            break;
+
+            case 0x6000:
+            break;
+
+            case 0x7000:
+            break;
+
+            case 0x8000:
+                switch(opcode & 0x000F){
+                    case 0x0000: //Sets VX to the value of VY.
+                        V[(opcode & 0x0F00) >> 8] = V[(opcode & 0x00F0) >> 4];
+                        pc += 2;
+                    break;
+
+                    case 0x0001:
+                    break;
+
+                    case 0x0002:
+                    break;
+
+                    case 0x0003:
+                    break;
+
+                    case 0x0004: //Adds VY to VX
+                        //Checks if there is an overflow. For the code 0x8XY4:
+                        //We see if V[Y] is bigger, than the capacity left to reach 255. if V[Y] is bigger than there is an overflow. 
+                        if(V[(opcode & 0x00F0) >> 4] > (0xFF - V[(opcode & 0x0F00) >> 8]))
+                            //Position 15, used has carry-flag
+                            V[0xF] = 1; //carry
+                        else
+                            V[0xF] = 0;
+
+                        //Adds VY to VX
+                        V[(opcode & 0x0F00) >> 8] += V[(opcode & 0x00F0) >> 4];
+                        pc += 2;
+                    break;
+
+                    case 0x0005:
+                    break;
+
+                    case 0x0006:
+                    break;
+
+                    case 0x0007:
+                    break;
+                }
+            break;
+
+            case 0x9000:
+            break;
+        
+            default:
+            printf ("Unknown opcode: 0x%X\n", opcode);
+        }  
 
         // Update timers
         //Emulation cycles has to execute 60 codes per second (60Hz) for the timers to work correctly.
+        // Update timers
+        if(delay_timer > 0)
+            --delay_timer;
+        
+        if(sound_timer > 0)
+        {
+            if(sound_timer == 1)
+            printf("BEEP!\n");
+            --sound_timer;
+        } 
     }
