@@ -148,16 +148,31 @@
                 pc = V[0] + (opcode & 0x0FFF);
             break;
 
-            case 0xC000:
+            case 0xC000: //Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
+                V[(opcode & 0x0F00) >> 8] = (rand() % 256) & (opcode & 0x00FF);
+                pc += 2;
             break;
             
-            case 0xD000:
+            case 0xD000: //DXYN
+            /*Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels. 
+            Each row of 8 pixels is read as bit-coded starting from memory location I; 
+            I value does not change after the execution of this instruction. 
+            As described above, VF is set to 1 if any screen pixels are flipped from set to unset when the sprite is drawn, and to 0 if that does not happen.*/
+
+            
+
             break;
 
             case 0xE000:
             break;
 
             case 0xF000:
+            break;
+
+            case 0x0000:
+            break;
+
+            case 0x1000:
             break;
 
             case 0x2000: //Calls subroutine at NNN.
@@ -170,19 +185,35 @@
                 //Because we are calling at a specific address, we don't increment pc
             break;
 
-            case 0x3000:
+            case 0x3000: //Skips the next instruction if VX equals NN (usually the next instruction is a jump to skip a code block).
+                if(V[(opcode & 0x0F00) >> 8] == (opcode & 0x00FF))
+                    pc += 4;
+                else
+                    pc += 2;
             break;
 
-            case 0x4000:
+            case 0x4000: //Skips the next instruction if VX does not equal NN (usually the next instruction is a jump to skip a code block).
+                if(V[(opcode & 0x0F00) >> 8] != (opcode & 0x00FF))
+                    pc += 4;
+                else
+                    pc += 2;
             break;
 
-            case 0x5000:
+            case 0x5000: //Skips the next instruction if VX equals VY (usually the next instruction is a jump to skip a code block).
+                if(V[(opcode & 0x0F00) >> 8] == V[(opcode & 0x00F0) >> 4])
+                    pc += 4;
+                else
+                    pc += 2;
             break;
 
-            case 0x6000:
+            case 0x6000: //Sets VX to NN.
+                V[(opcode & 0x0F00) >> 8] = (opcode & 0x00FF);
+                pc += 2;
             break;
 
-            case 0x7000:
+            case 0x7000: //Adds NN to VX (carry flag is not changed).
+                V[(opcode & 0x0F00) >> 8] += (opcode & 0x00FF);
+                pc += 2;
             break;
 
             case 0x8000:
@@ -192,13 +223,19 @@
                         pc += 2;
                     break;
 
-                    case 0x0001:
+                    case 0x0001: //Sets VX to VX or VY. (bitwise OR operation).
+                        V[(opcode & 0x0F00) >> 8] = V[(opcode & 0x0F00) >> 8] | V[(opcode & 0x00F0) >> 4];
+                        pc += 2;
                     break;
 
-                    case 0x0002:
+                    case 0x0002: //Sets VX to VX and VY. (bitwise AND operation).
+                         V[(opcode & 0x0F00) >> 8] = V[(opcode & 0x0F00) >> 8] & V[(opcode & 0x00F0) >> 4];
+                        pc += 2;
                     break;
 
-                    case 0x0003:
+                    case 0x0003: //	Sets VX to VX xor VY.
+                        V[(opcode & 0x0F00) >> 8] = V[(opcode & 0x0F00) >> 8] ^ V[(opcode & 0x00F0) >> 4];
+                        pc += 2;
                     break;
 
                     case 0x0004: //Adds VY to VX
@@ -215,18 +252,45 @@
                         pc += 2;
                     break;
 
-                    case 0x0005:
+                    case 0x0005: //VY is subtracted from VX. 
+                                //VF is set to 0 when there's an underflow, and 1 when there is not.
+                        //Underflow is when a subtraction results in a negative number. So we check if VY is bigger than VX
+                        if(V[(opcode & 0x00F0) >> 4] > V[(opcode & 0x0F00) >> 8])
+                            V[0xF] = 0;
+                        else
+                            V[0xF] = 1;
+
+                        V[(opcode & 0x0F00) >> 8] = V[(opcode & 0x0F00) >> 8] - V[(opcode & 0x00F0) >> 4];
+
+                        pc += 2;
+
                     break;
 
-                    case 0x0006:
+                    case 0x0006: //Shifts VX to the right by 1, then stores the least significant bit of VX prior to the shift into VF.
+                        //Last bit least significant. Bitwise AND with 1
+                        V[0xF] = V[(opcode & 0x0F00) >> 8] & 1;
+                        V[(opcode & 0x0F00) >> 8] >>= 1;
+
+                        pc += 2;
                     break;
 
-                    case 0x0007:
+                    case 0x0007: //Sets VX to VY minus VX. 
+                                //VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX).
+                        if(V[(opcode & 0x0F00) >> 8] < V[(opcode & 0x00F0) >> 4])
+                            V[0xF] = 0; //underflow
+                        else
+                            V[0xF] = 1;
+
+                        V[(opcode & 0x0F00) >> 8] = V[(opcode & 0x00F0) >> 4] - V[(opcode & 0x0F00) >> 8];
                     break;
                 }
             break;
 
-            case 0x9000:
+            case 0x9000: //Skips the next instruction if VX does not equal VY.
+                if(V[(opcode & 0x0F00) >> 8] != V[(opcode & 0x00F0) >> 4])
+                    pc += 4; //Skips the next instruction
+                else
+                    pc += 2; //Goes to the next instruction
             break;
         
             default:
