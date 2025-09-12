@@ -20,7 +20,7 @@
         0xF0, 0x80, 0xF0, 0x80, 0xF0, //E
         0xF0, 0x80, 0xF0, 0x80, 0x80  //F
     };
-
+    
     chip8::chip8()
     {
         // empty
@@ -154,19 +154,129 @@
             break;
             
             case 0xD000: //DXYN
-            /*Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels. 
-            Each row of 8 pixels is read as bit-coded starting from memory location I; 
-            I value does not change after the execution of this instruction. 
-            As described above, VF is set to 1 if any screen pixels are flipped from set to unset when the sprite is drawn, and to 0 if that does not happen.*/
+                /*Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels. 
+                Each row of 8 pixels is read as bit-coded starting from memory location I; 
+                I value does not change after the execution of this instruction. 
+                As described above, VF is set to 1 if any screen pixels are flipped from set to unset when the sprite is drawn, and to 0 if that does not happen.*/
 
+                unsigned short x = V[(opcode & 0x0F00) >> 8];
+                unsigned short y = V[(opcode & 0x00F0) >> 4];
+                unsigned short n = V[(opcode & 0x000F)];
+
+                unsigned short width = 8;
+
+                unsigned short pixel;
+
+                V[0xF] = 0;
+
+                for(int yLine = 0; yLine < n; yLine++){
+                    //Gets the pixel value at each Y axis position
+                    pixel = memory[I + yLine];
+
+                    for(int xLine = 0; xLine < width; xLine++){
+
+                        //Checks if the pixel value, along the X axis, is activated or not, 0x80 is 10000000, for each iteration the 1 will bitshift to the right.
+                        //This way, it will go through each bit value of the pixel. If its activated, there wont be any need to activate it, otherwise, it will toggle the pixel.
+                        //If the pixel goes from set to unset (1 to 0), then VF is set to 1, meaning there was a collision.
+                        //The pixel value is set with a xor operation on 1.
+
+                        if((pixel & (0x80 >> xLine)) != 0){
+                            
+                            //If the pixel is flipped from 1 to 0
+                            if(gfx[(x + xLine + ((y + yLine) * 64))] == 1)
+                                V[0xF] = 1;       
+
+                            //Set the pixel value
+                            gfx[x + xLine + ((y + yLine) * 64)] ^= 1;
+                        }
+                    }
+                }
+
+                drawFlag = true;
+                pc += 2;
             
-
             break;
 
             case 0xE000:
+                switch(opcode & 0x00FF){
+                    case 0x009E: //Skips the next instruction if the key stored in VX
+                    //(only consider the lowest nibble) is pressed (usually the next instruction is a jump to skip a code block).
+                        if(key[V[(opcode & 0x0F00) >> 8]] != 0){
+                            pc += 4;
+                        }else{
+                            pc += 2;
+                        }
+                    break;
+
+                    case 0x00A1: //Skips the next instruction if the key stored in VX(only consider the lowest nibble) 
+                                //is not pressed (usually the next instruction is a jump to skip a code block).
+                        if(key[V[(opcode & 0x0F00) >> 8]] == 0){
+                            pc += 4;
+                        }else{
+                            pc += 2;
+                        }
+
+                    break;
+                }
+
             break;
 
             case 0xF000:
+                switch(opcode & 0x00FF){
+                    case 0x0007: //Sets VX to the value of the delay timer.
+                        V[(opcode & 0x0F00) >> 8] = delay_timer;
+                        pc += 2;
+                    break;
+
+                    case 0x000A: //A key press is awaited, and then stored in VX.
+                        
+                        //Checks each key space
+                        bool keyPress = false;
+                        for(int i = 0; i<16; i++){
+                            if(key[i] != 0){
+                                V[(opcode & 0x0F00) >> 8] = i;
+                                keyPress = true;
+                            }
+                        }
+                        //If no key is pressed will return and retry, the pc doesnt advance, so it doesnt skip to the next instruction
+                        if(!keyPress){
+                            return;
+                        }
+
+                        pc += 2;
+                    break;
+
+                    case 0x0015: //Sets the delay timer to VX.
+                        delay_timer = V[(opcode & 0x0F00) >> 8];
+                        pc += 2;
+                    break;
+
+                    case 0x0018: //Sets the sound timer to VX.
+
+                        sound_timer = V[(opcode & 0x0F00) >> 8];
+                        pc += 2;
+                    break;
+
+                    case 0x001E: //Adds VX to I. VF is not affected.
+                        I+=V[(opcode & 0x0F00) >> 8];
+                        pc += 2;
+                    break;
+
+                    case 0x0029: //Sets I to the location of the sprite for the character in VX(only consider the lowest nibble). 
+                                //Characters 0-F (in hexadecimal) are represented by a 4x5 font.
+
+                    break;
+
+                    case 0x0033:
+                    break;
+
+                    case 0x0055:
+                    break;
+
+                    case 0x0065:
+                    break;
+
+                }
             break;
 
             case 0x0000:

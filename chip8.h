@@ -11,8 +11,6 @@ class chip8{
 
         //keypad
         unsigned char key[16];
-
-        void initialize();
     
     public:
         //chip-8 system
@@ -42,6 +40,7 @@ class chip8{
 		~chip8();
 
         bool drawFlag;
+        void initialize();
         bool loadGame(const char* gameName);
         void emulateCycle();
         void setKeys();
