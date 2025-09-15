@@ -21,15 +21,9 @@
         0xF0, 0x80, 0xF0, 0x80, 0x80  //F
     };
     
-    chip8::chip8()
-    {
-        // empty
-    }
+    chip8::chip8(){}
 
-    chip8::~chip8()
-    {
-        // empty
-    }
+    chip8::~chip8(){}
     
 
     void chip8::initialize(){
@@ -264,25 +258,76 @@
 
                     case 0x0029: //Sets I to the location of the sprite for the character in VX(only consider the lowest nibble). 
                                 //Characters 0-F (in hexadecimal) are represented by a 4x5 font.
+                                //0x5??
+                        I = V[(opcode & 0x0F00) >> 8] * 0x5;
+                        pc += 2;
+                    break;
+
+                    case 0x0033: //Stores the binary-coded decimal representation of VX, 
+                                //with the hundreds digit in memory at location in I, the tens digit at location I+1, 
+                                //and the ones digit at location I+2.
+
+                        memory[I] = V[(opcode & 0x0F00) >> 8] / 100; //567: 567 / 100 = 5
+                        memory[I+1] = (V[(opcode & 0x0F00) >> 8] / 10) % 10; //567: 56 -> mod 10 = 6
+                        memory[I+2] = V[(opcode & 0x0F00) >> 8] % 10;
+
+                        pc += 2;
 
                     break;
 
-                    case 0x0033:
+                    case 0x0055: //Stores from V0 to VX (including VX) in memory, starting at address I. 
+                                //The offset from I is increased by 1 for each value written, but I itself is left unmodified.
+                        int vx = (opcode & 0x0F00) >> 8;
+                        for(int i = 0; i <= vx; i++){
+                            memory[I + i] = V[i];
+                        }
+
+                        pc += 2;
                     break;
 
-                    case 0x0055:
-                    break;
+                    case 0x0065://Fills from V0 to VX (including VX) with values from memory, starting at address I. 
+                                //The offset from I is increased by 1 for each value read, but I itself is left unmodified.
+                        
+                        int vx = (opcode & 0x0F00) >> 8;
+                        for(int i = 0; i <= vx; i++){
+                            V[i] = memory[I + i];
+                        }
 
-                    case 0x0065:
+                        pc += 2; 
                     break;
 
                 }
             break;
 
             case 0x0000:
+                switch(opcode & 0x00FF){
+                    case 0x0000: //Calls machine code routine (RCA 1802 for COSMAC VIP) at address NNN. 
+                                //Not necessary for most ROMs.
+
+                        pc = opcode & 0x0FFF;
+
+                    break;
+
+                    case 0x00E0: //Clears the screen.
+                        for(int i = 0; i < 2048; ++i)
+                            gfx[i] = 0;
+
+                        drawFlag = true;
+
+                        pc += 2;
+
+                    break;
+
+                    case 0x00EE: //Returns from a subroutine.
+                        --sp;			// 16 levels of stack, decrease stack pointer to prevent overwrite
+                        pc = stack[sp];	// Put the stored return address from the stack back into the program counter					
+                        pc += 2;
+                    break;
+                }
             break;
 
-            case 0x1000:
+            case 0x1000: //Jumps to address NNN.
+                pc = opcode & 0x0FFF;
             break;
 
             case 0x2000: //Calls subroutine at NNN.
