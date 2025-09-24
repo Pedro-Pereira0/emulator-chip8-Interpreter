@@ -160,7 +160,8 @@
                 pc += 2;
             break;
             
-            case 0xD000: //DXYN
+            case 0xD000:
+            { //DXYN
                 /*Draws a sprite at coordinate (VX, VY) that has a width of 8 pixels and a height of N pixels. 
                 Each row of 8 pixels is read as bit-coded starting from memory location I; 
                 I value does not change after the execution of this instruction. 
@@ -168,7 +169,7 @@
 
                 unsigned short x = V[(opcode & 0x0F00) >> 8];
                 unsigned short y = V[(opcode & 0x00F0) >> 4];
-                unsigned short n = V[(opcode & 0x000F)];
+                unsigned short n = opcode & 0x000F;
 
                 unsigned short width = 8;
 
@@ -202,7 +203,8 @@
                 drawFlag = true;
                 pc += 2;
             
-            break;
+                break;
+            }
 
             case 0xE000:
                 switch(opcode & 0x00FF){
@@ -235,7 +237,7 @@
                         pc += 2;
                     break;
 
-                    case 0x000A: //A key press is awaited, and then stored in VX.
+                    case 0x000A:{ //A key press is awaited, and then stored in VX.
                         
                         //Checks each key space
                         bool keyPress = false;
@@ -251,8 +253,8 @@
                         }
 
                         pc += 2;
-                    break;
-
+                        break;
+                    }
                     case 0x0015: //Sets the delay timer to VX.
                         delay_timer = V[(opcode & 0x0F00) >> 8];
                         pc += 2;
@@ -288,7 +290,7 @@
 
                     break;
 
-                    case 0x0055: //Stores from V0 to VX (including VX) in memory, starting at address I. 
+                    case 0x0055:{ //Stores from V0 to VX (including VX) in memory, starting at address I. 
                                 //The offset from I is increased by 1 for each value written, but I itself is left unmodified.
                         int vx = (opcode & 0x0F00) >> 8;
                         for(int i = 0; i <= vx; i++){
@@ -296,9 +298,9 @@
                         }
 
                         pc += 2;
-                    break;
-
-                    case 0x0065://Fills from V0 to VX (including VX) with values from memory, starting at address I. 
+                        break;
+                    }
+                    case 0x0065:{//Fills from V0 to VX (including VX) with values from memory, starting at address I. 
                                 //The offset from I is increased by 1 for each value read, but I itself is left unmodified.
                         
                         int vx = (opcode & 0x0F00) >> 8;
@@ -307,8 +309,8 @@
                         }
 
                         pc += 2; 
-                    break;
-
+                        break;
+                    }
                 }
             break;
 
