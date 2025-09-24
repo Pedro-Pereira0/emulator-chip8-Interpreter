@@ -24,6 +24,23 @@
     chip8::chip8(){}
 
     chip8::~chip8(){}
+
+    void chip8::debugRender()
+    {
+        // Draw
+        for(int y = 0; y < 32; ++y)
+        {
+            for(int x = 0; x < 64; ++x)
+            {
+                if(gfx[(y*64) + x] == 0) 
+                    printf("O");
+                else 
+                    printf(" ");
+            }
+            printf("\n");
+        }
+        printf("\n");
+    }
     
 
     void chip8::initialize(){
@@ -108,10 +125,6 @@
         free(buffer);
 
         return true;
-    }
-
-    void chip8::setKeys(){
-
     }
 
     //Emulates one emulation cycle, where an opcode is fetch, decoded and executed

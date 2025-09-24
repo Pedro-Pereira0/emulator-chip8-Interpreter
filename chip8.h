@@ -3,7 +3,7 @@
 
 class chip8{
 
-    private:
+    public:
         //The graphics of the Chip 8 are black and white and the screen has a total of 2048 pixels (64 * 32)
         //Pixel state 1 or 0
         //Drawing is done with XOR operations
@@ -11,8 +11,16 @@ class chip8{
 
         //keypad
         unsigned char key[16];
+
+        chip8();
+		~chip8();
+
+        bool drawFlag;
+        bool loadGame(const char* gameName);
+        void emulateCycle();
+        void debugRender();
     
-    public:
+    private:
         //chip-8 system
         //35 operation codes 
         unsigned short opcode;
@@ -36,12 +44,6 @@ class chip8{
         //Pointer sp is used to remember the current level of the stack
         unsigned short sp;
 
-        chip8();
-		~chip8();
-
-        bool drawFlag;
+  
         void initialize();
-        bool loadGame(const char* gameName);
-        void emulateCycle();
-        void setKeys();
 };
