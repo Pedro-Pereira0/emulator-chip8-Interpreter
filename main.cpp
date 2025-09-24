@@ -43,16 +43,16 @@ int main(int argc, char **argv){
 	glutInitWindowSize(display_width, display_height);
     glutInitWindowPosition(320, 320);
 	glutCreateWindow("myChip8");
-	
+
 	glutDisplayFunc(display);
 	glutIdleFunc(display);
     glutReshapeFunc(reshape_window);        
 	glutKeyboardFunc(keyboardDown);
-	glutKeyboardUpFunc(keyboardUp); 
+	glutKeyboardUpFunc(keyboardUp);
 
     #ifdef DRAWWITHTEXTURE
 	    setupTexture();			
-    #endif	
+    #endif
 
 	glutMainLoop(); 
 
@@ -167,7 +167,7 @@ void reshape_window(GLsizei w, GLsizei h)
 
 void keyboardDown(unsigned char key, int x, int y)
 {
-	if(key == 27)    // esc
+	if(key == 27)// esc
 		exit(0);
 
 	if(key == '1')		myChip8.key[0x1] = 1;
@@ -189,8 +189,6 @@ void keyboardDown(unsigned char key, int x, int y)
 	else if(key == 'x')	myChip8.key[0x0] = 1;
 	else if(key == 'c')	myChip8.key[0xB] = 1;
 	else if(key == 'v')	myChip8.key[0xF] = 1;
-
-	//printf("Press key %c\n", key);
 }
 
 void keyboardUp(unsigned char key, int x, int y)

@@ -1,5 +1,6 @@
 #include "chip8.h"
 #include <iostream>
+using namespace std;
 
     unsigned char chip8_fontset[80] =
     { 
@@ -79,7 +80,7 @@
 
         initialize();
 
-        std::cout<<"Loading %s\n", gameName;
+        std::cout<<"Loading: " << gameName << endl;
 
         //Opening the application as binary
         FILE* fp = fopen(gameName, "rb");
@@ -93,7 +94,7 @@
         fseek(fp , 0 , SEEK_END);
         long lSize = ftell(fp);
         rewind(fp);
-        std::cout<<"Filesize: %d\n", (int)lSize;
+        std::cout<<"Filesize: " << (int)lSize << endl;
 
         //Allocate the memory to contain the whole file
         char* buffer = (char*)malloc(sizeof(char) * lSize);
@@ -216,7 +217,7 @@
                             pc += 2;
                         }
                     break;
-
+                
                     case 0x00A1: //Skips the next instruction if the key stored in VX(only consider the lowest nibble) 
                                 //is not pressed (usually the next instruction is a jump to skip a code block).
                         if(key[V[(opcode & 0x0F00) >> 8]] == 0){
